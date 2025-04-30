@@ -1,5 +1,4 @@
-<p align="center">
-<img src="https://uploaddeimagens.com.br/images/003/361/136/original/placeholder.jpg">
+
 </p>
 <p align="center">
 <h3 align="center">Como ter sua própria nuvem de hospedagem de arquivos</h3>
@@ -26,12 +25,12 @@
   </a>
 	
   <a href="https://www.x.com/iamarthurcorona">
-    <img alt="LinkedIn" width="25" src="./images/logo_x.png">
+    <img alt="x" width="25" src="./images/logo_x.png">
   </a>
 </p>
 
 ## 📋 Pré-requisitos  
-- Um computador/servidor (eu utilizo um Raspberry PI 4).  
+- Uma máquina para utilizar de servidor (eu utilizo um Raspberry PI 4).  
 - Docker e Docker Compose instalados.
 - Domínio (não é obrigatório, mas é recomendado para ativar o SSL).  
 
@@ -39,7 +38,6 @@
 
 ### 1. Instalar Docker e Docker Compose  
 ```bash
-# Exemplo para Ubuntu:
 sudo apt update && sudo apt install docker docker-compose -y
 sudo systemctl enable --now docker
 ```
@@ -50,15 +48,23 @@ sudo mkdir external_drive
 cd external_drive
 sudo mkdir nextcloud apps config data theme 
 ```
-### 2. Criar os arquivos do nextcloud
-```bash
+### 2. Criar os arquivos do nextcloud (Recomendado)
 
-```
+### Arquivos: Dockerfile.app; nginx.conf; setup-nextcloud.sh; db.env; docker-compose.yml 
+Lembrando que os arquivos não são totalmente necessários, entretanto, todos possuem uma função importante.
+O <a href="https://docs.docker.com/compose/">docker-compose</a> melhora a organização e manutenção, sendo um arquivo de orquestração.
+O db.env organiza melhor as informações sensíveis.
+O <a href="https://www.f5.com/go/product/welcome-to-nginx">Nginx</a> é um arquivo para a configuração do proxy reverso, para aumentar a segurança.
+O Dockerfile é um arquivo para customizar o container do nextcloud.
+
+Caso queira instalar eles, apenas faça o download dos no diretório do github e faça as alterações necessárias para você. 
+Coloquei informações de exemplo, para evitar vazar dados sensíveis.
  
 ### Rodar o docker
 
 ```bash
-sudo docker run -d -p 90:90 --name nextcloud --restart unless-stopped \
+# O comando -p 80:80 está mapeando a porta 80 do container pra porta 80 do pc
+sudo docker run -d -p 80:80 --name nextcloud --restart unless-stopped \
 -v /external_drive/nextcloud:/var/www/html \
 -v /external_drive/apps:/var/www/html/custom_apps \
 -v /external_drive/config:/var/www/html/config \
@@ -67,11 +73,11 @@ sudo docker run -d -p 90:90 --name nextcloud --restart unless-stopped \
 nextcloud
 ```
 
-### Incrementar segurança: 
+### Incrementando segurança: 
 
-Adicionando um certificado SSL: 
+Para adicionar um certificado SSL: 
 Necessário ter um domínio, por exemplo: google.com.br (É possível comprar pelo registro.br)
-Necessário instalar o Nginx e o Certbot
+Necessário instalar o Nginx e o Certbot para fazer proxy reverso.
 
 ```bash 
 sudo apt update
@@ -102,8 +108,11 @@ sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
-
+Para obter o certificado SSL com Let´s Encrypt, use: 
 ```bash
 sudo certbot --nginx -d nuvem.seudominio.com
 ```
+Após isso, teste seu domínio no navegador.
+
+
 
