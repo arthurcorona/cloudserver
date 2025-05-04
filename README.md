@@ -1,7 +1,7 @@
 
 </p>
 <p align="center">
-<h3 align="center">Como ter sua própria nuvem de hospedagem de arquivos</h3>
+<h2 align="center">Como ter sua própria nuvem de hospedagem de arquivos</h3>
 <p align="center">
   Um guia passo a passo para criar seu próprio servidor de nuvem em casa, usando Nextcloud e Docker sem depender de serviços de big techs como Google Drive ou Dropbox!
 </p>
@@ -42,22 +42,33 @@ sudo apt update && sudo apt install docker docker-compose -y
 sudo systemctl enable --now docker
 ```
 
-### 3. Criar as pastas do Nextcloud 
+### 3. Criar as pastas do Nextcloud
+Antes de criar o "external_drive", use o sudo fdisk -l para ver os discos, e escolha o que quiser.
+
 ```bash
+
+mkdir /external_drive
+
+sudo mount /dev/sdc3 /external_drive 
+
+sudo mount /dev/sdc3 /media/usb
+
 sudo mkdir external_drive
 cd external_drive
 sudo mkdir nextcloud apps config data theme 
 ```
 ### 2. Criar os arquivos do nextcloud (Recomendado)
 
-### Arquivos: Dockerfile.app; nginx.conf; setup-nextcloud.sh; db.env; docker-compose.yml 
-Lembrando que os arquivos não são totalmente necessários, entretanto, todos possuem uma função importante.
-O <a href="https://docs.docker.com/compose/">docker-compose</a> melhora a organização e manutenção, sendo um arquivo de orquestração.
-O db.env organiza melhor as informações sensíveis.
-O <a href="https://www.f5.com/go/product/welcome-to-nginx">Nginx</a> é um arquivo para a configuração do proxy reverso, para aumentar a segurança.
-O Dockerfile é um arquivo para customizar o container do nextcloud.
+#### Arquivos: Dockerfile.app; nginx.conf; setup-nextcloud.sh; db.env; docker-compose.yml 
+Lembrando que os arquivos não são totalmente necessários, entretanto, todos possuem uma função importante.</p>
+<p>O <a href="https://docs.docker.com/compose/">docker-compose</a> melhora a organização e manutenção, sendo um arquivo de orquestração.</p>
+<p>O db.env organiza melhor as informações sensíveis.</p>
+<p>O <a href="https://www.f5.com/go/product/welcome-to-nginx">Nginx</a> é um arquivo para a configuração do proxy reverso, para aumentar a segurança.</p>
+<p>O Dockerfile é um arquivo para customizar o container do nextcloud.</p>
 
-Caso queira instalar eles, apenas faça o download dos no diretório do github e faça as alterações necessárias para você. 
+<p>
+Caso queira instalar eles, apenas faça o download dos no diretório do repositório no github e faça as alterações necessárias para você. 
+</p>
 Coloquei informações de exemplo, para evitar vazar dados sensíveis.
  
 ### Rodar o docker
