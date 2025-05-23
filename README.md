@@ -40,7 +40,7 @@ sudo apt update && sudo apt install docker docker-compose -y
 sudo systemctl enable --now docker
 ```
 
-### 3. Criar as pastas do Nextcloud
+### 2. Criar as pastas do Nextcloud
 Antes de criar o "external_drive", use o sudo fdisk -l para ver os discos, e escolha o que quiser.
 
 ```bash
@@ -55,7 +55,7 @@ sudo mkdir external_drive
 cd external_drive
 sudo mkdir nextcloud apps config data theme 
 ```
-### 2. Criar os arquivos do nextcloud (Recomendado)
+### 3. Criar os arquivos do nextcloud (Recomendado)
 
 #### Arquivos: Dockerfile.app; nginx.conf; setup-nextcloud.sh; db.env; docker-compose.yml 
 Lembrando que os arquivos não são totalmente necessários, entretanto, todos possuem uma função importante.</p>
@@ -82,9 +82,9 @@ sudo docker run -d -p 80:80 --name nextcloud --restart unless-stopped \
 nextcloud
 ```
 
-## Incrementando segurança: 
+## 🛡️ Incrementando segurança: 
 ### Criando usuários com permissões específicas 
-<p>Uma coisa importante é criar usuários com permissões mínimas.</p>
+<h4>Criar usuários com permissões mínimas.</p>
 <p>1. Entre no Nextcloud com uma conta de administrador</p>
 <p>2. Vá até a seção de usuários e crie um novo</p>
 <p>Preencha o usuário, senha, e-mail.</p>
@@ -92,18 +92,16 @@ nextcloud
 <p>Agora você precisa acessar o app e definir as permissões</p>
 
 ### Adicionando certificado SSL
-<p>Necessário ter um domínio, por exemplo: google.com.br (É possível comprar pelo registro.br)</p>
-<p>Necessário instalar o Nginx e o Certbot para fazer proxy reverso.</p>
-<p>Baixar os arquivos de certificado</p>
+<h3>1.Configurar o domínio</h3>
+
+<p> Depois de obter o domínio:</p>
+
+</p>Acesse o painel do seu domínio e atualize o registro A para apontar para seu IP público</p>
+
+
 
 <p>Para baixar a pasta com os certificados:</p>
-
-```bash
-mkdir sslcerts
-sudo cp /etc/letsencrypt/live/<dominio>/fullchain.pem ./sslcerts/coronacloud.com.br.crt
-sudo cp /etc/letsencrypt/live/<dominio>/privkey.pem ./sslcerts/coronacloud.com.br.key
-sudo cp /etc/ssl/certs/dhparam.pem ./sslcerts/dhparam.pem  # Se você tiver o Diffie-Hellman
-```
+<p>Necessário instalar o Nginx e o Certbot para fazer proxy reverso.</p>
 
 ```bash
 sudo apt update
@@ -115,7 +113,9 @@ sudo nano /etc/nginx/sites-available/nextcloud
 
 # e adicionar: 
 server {
-#obs: ip e dominio de exemplo por questões de segurança.
+#obs: IP e dominio de exemplo por questões de segurança.
+#obs2: lembre-se de pegar o IP público, e não da sua máquina. Tive uma boa dor de cabeça por causa de uma "besteira" dessas.
+
     listen 80;
     server_name nuvem.seudominio.com;
 
@@ -127,7 +127,29 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
+
 ```
+
+```bash
+
+<p>Baixar os arquivos de certificado</p>
+
+$ sudo docker compose run --rm certbot certonly \
+  --manual \
+  --preferred-challenges dns \
+  -d seudominio.com.br \
+  --email seuemail@email.com \
+  --agree-tos \
+  --no-eff-email
+
+
+```
+
+mkdir sslcerts
+sudo cp /etc/letsencrypt/live/<dominio>/fullchain.pem ./sslcerts/coronacloud.com.br.crt
+sudo cp /etc/letsencrypt/live/<dominio>/privkey.pem ./sslcerts/coronacloud.com.br.key
+sudo cp /etc/ssl/certs/dhparam.pem ./sslcerts/dhparam.pem  # Se você tiver o Diffie-Hellman
+
 
 Criar uma pasta de validação do webroot:
 
@@ -158,6 +180,8 @@ Gere o dhparam com:
 ```bash
 openssl dhparam -out sslcerts/dhparam.pem 2048
 ```
+<p>O gerenciador de arquivos deve ficar parecido com isso:</p>
+<img src="./images/files.png">
 
 <p>Lembrando que o Lets Encrypt expira o certificado a cada 90 dias, e, para isso, deve-se fazer o seguinte:
 
@@ -192,6 +216,5 @@ Para obter o certificado SSL com Let´s Encrypt, use:
 sudo certbot --nginx -d nuvem.seudominio.com
 ```
 Após isso, teste seu domínio no navegador.
-
 
 
