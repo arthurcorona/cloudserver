@@ -22,7 +22,7 @@
     <img alt="LinkedIn" width="25" src="https://github.com/Universidade-Livre/imagens/blob/main/png/linkedin.png">
   </a>
 	
-  <a href="https://www.x.com/iamarthurcorona">
+  <a href="https://www.x.com/imarthurcorona">
     <img alt="x" width="25" src="./images/logo_x.png">
   </a>
 </p>
@@ -55,7 +55,7 @@ sudo mkdir external_drive
 cd external_drive
 sudo mkdir nextcloud apps config data theme 
 ```
-### 3. Criar os arquivos do nextcloud (Recomendado)
+### 3. Criar os arquivos do nextcloud
 
 #### Arquivos: Dockerfile.app; nginx.conf; setup-nextcloud.sh; db.env; docker-compose.yml 
 Lembrando que os arquivos não são totalmente necessários, entretanto, todos possuem uma função importante.</p>
@@ -83,25 +83,22 @@ nextcloud
 ```
 
 ## 🛡️ Incrementando segurança: 
-### Criando usuários com permissões específicas 
-<h4>Criar usuários com permissões mínimas.</p>
-<p>1. Entre no Nextcloud com uma conta de administrador</p>
-<p>2. Vá até a seção de usuários e crie um novo</p>
-<p>Preencha o usuário, senha, e-mail.</p>
-<p>Desmarque a opção "Administrador" se ela estiver ativada.</p>
-<p>Agora você precisa acessar o app e definir as permissões</p>
 
-### Adicionando certificado SSL
-<h3>1.Configurar o domínio</h3>
+  <h3>Criar usuários com permissões mínimas.</h3>
+<p>   1. Entre no Nextcloud com uma conta de administrador</p>
+<p>   2. Vá até a seção de usuários e crie um novo</p>
+<p>   3. Preencha o usuário, senha, e-mail.</p>
+<p>   4. Desmarque a opção "Administrador" se ela estiver ativada.</p>
+<p>   5. Agora você precisa acessar o app e definir as permissões</p>
 
-<p> Depois de obter o domínio:</p>
+  ### Adicionando certificado SSL
+<h4>  Configurar o domínio</h3>
 
-</p>Acesse o painel do seu domínio e atualize o registro A para apontar para seu IP público</p>
+<p>   Depois de obter o domínio:</p>
 
-
-
-<p>Para baixar a pasta com os certificados:</p>
-<p>Necessário instalar o Nginx e o Certbot para fazer proxy reverso.</p>
+</p>1. Acesse o painel do seu domínio e atualize o registro A para apontar para seu IP público</p>
+<p>2. Para baixar a pasta com os certificados:</p>
+<p>3. Necessário instalar o Nginx e o Certbot para fazer proxy reverso.</p>
 
 ```bash
 sudo apt update
@@ -127,10 +124,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-
 ```
 
 ```bash
+
 
 <p>Baixar os arquivos de certificado</p>
 
@@ -142,8 +139,41 @@ $ sudo docker compose run --rm certbot certonly \
   --agree-tos \
   --no-eff-email
 
+```
+<p> Deverá retornar algo como: </p>
+
+```bash
+
+  [+] Creating 3/3
+ ✔ Container storage_server-db-1           Running                         0.0s 
+ ✔ Container storage_server-app-1          Running                         0.0s 
+ ✔ Container storage_server-nginx-proxy-1  Running                         0.0s 
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for coronacloud.com.br
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Please deploy a DNS TXT record under the name:
+
+_acme-challenge.seudominio.com.br.
+
+with the following value:
+
+códigoxxx
+
+Before continuing, verify the TXT record has been deployed. Depending on the DNS
+provider, this may take some time, from a few seconds to multiple minutes. You can
+check if it has finished deploying with aid of online tools, such as the Google
+Admin Toolbox: https://toolbox.googleapps.com/apps/dig/#TXT/_acme-challenge.coronacloud.com.br.
+Look for one or more bolded line(s) below the line ';ANSWER'. It should show the
+value(s) you've just added.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Press Enter to Continue
 
 ```
+
+<p>Apenas siga as instruções.</p>
+
 
 mkdir sslcerts
 sudo cp /etc/letsencrypt/live/<dominio>/fullchain.pem ./sslcerts/coronacloud.com.br.crt
