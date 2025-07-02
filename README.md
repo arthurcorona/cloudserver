@@ -49,7 +49,7 @@ mkdir /external_drive
 
 sudo mount /dev/sdc3 /external_drive 
 
-sudo mount /dev/sdc3 /media/usb
+echo "/dev/sdc3 /external_drive ext4 defaults 0 0" | sudo tee -a /etc/fstab
 
 sudo mkdir external_drive
 cd external_drive
@@ -98,7 +98,7 @@ nextcloud
 
 </p>1. Acesse o painel do seu domínio e atualize o registro A para apontar para seu IP público</p>
 <p>2. Para baixar a pasta com os certificados:</p>
-<p>3. Necessário instalar o Nginx e o Certbot para fazer proxy reverso.</p>
+<p>3. Necessário instalar o Certbot e o Nginx para fazer proxy reverso.</p>
 
 ```bash
 sudo apt update

@@ -1,0 +1,23 @@
+🛑 Você realmente é dono dos seus próprios dados?
+
+Essa foi uma pergunta que comecei a me fazer há algum tempo. E, quanto mais aprofundei meus estudos sobre cibersegurança e privacidade, mais percebi o quanto estamos vulneráveis.
+
+Anos atrás, as empresas armazenavam seus dados em servidores próprios — soluções caras, complexas e de difícil manutenção. Com o surgimento da nuvem, esse cenário mudou. As empresas passaram a terceirizar suas infraestruturas, buscando reduzir custos e simplificar operações.
+
+Porém, essa conveniência tem um preço: a posse e o controle dos seus próprios dados.
+
+Ao armazenar um arquivo no Google Drive, iCloud, Dropbox ou qualquer outro serviço, ele não está “na nuvem”, no sentido abstrato. Na prática, seus dados estão gravados em servidores físicos, distribuídos em data centers ao redor do mundo, sob total controle dessas empresas.
+
+E, sim, eles têm acesso aos seus arquivos. Está explícito nos termos de uso — que, infelizmente, poucos leem — que os dados estão sujeitos a análises, monitoramento e às políticas internas dessas plataformas.
+
+Por mais robustas que sejam as estruturas de segurança, nenhum sistema é 100% seguro. Existem riscos de vazamentos, ataques, falhas de algoritmos e até bloqueios de contas. Há diversos relatos de pessoas que perderam o acesso a todos os seus dados por conta de uma análise incorreta de conteúdo, ou por descumprimento (muitas vezes involuntário) das diretrizes da plataforma.
+
+Diante disso, decidi desenvolver minha própria solução de armazenamento em nuvem, utilizando Nextcloud, Docker e um Raspberry Pi. Documentei todo o processo no GitHub, justamente para ajudar outras pessoas que também buscam mais autonomia, privacidade e controle sobre seus próprios dados.
+
+👉 https://github.com/arthurcorona/cloudserver
+
+Ter sua própria nuvem não elimina todos os riscos, mas proporciona muito mais segurança, privacidade e, principalmente, liberdade digital.
+
+Se você se interessa por cibersegurança, privacidade e quer entender como funciona esse processo, convido você a conhecer o projeto. Vamos juntos construir uma relação mais consciente e segura com a tecnologia. 🔐
+
+#Cibersegurança #Privacidade #Nextcloud #Docker #RaspberryPi #CloudStorage #OpenSource #AutonomiaDigital
