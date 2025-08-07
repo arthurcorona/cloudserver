@@ -1,250 +1,229 @@
 <p align="center">
-<h2 align="center">Como ter sua própria nuvem de hospedagem de arquivos</h3>
-<p align="center">
-  Um guia passo a passo para criar seu próprio servidor de nuvem em casa, usando Nextcloud e Docker sem depender de serviços de big techs como Google Drive ou Dropbox!
-</p>
-
-## 🚀 Por que fazer isso?  
-- Ter **controle total** sobre seus arquivos, uma vez que não irão depender de nenhuma big tech.  
-- Acesso remoto seguro aos seus dados.  
-- Personalização com plugins.
-- Economia a longo prazo (sem taxas de assinatura).  
-
-<p align="center">
   <a href="https://github.com/arthurcorona">
     <img alt="Corona" width="25" src="./images/logo_github.png">
   </a>
-</p>
-<p align="center">
-
-	
-   <a href="https://www.linkedin.com/in/arthur-corona-32a155216/">
-    <img alt="LinkedIn" width="25" src="https://github.com/Universidade-Livre/imagens/blob/main/png/linkedin.png">
+  <a href="https://www.linkedin.com/in/arthur-corona-32a155216/">
+    <img alt="LinkedIn" width="25" src="./images/logo_linkedin.png">
   </a>
-	
   <a href="https://www.x.com/imarthurcorona">
     <img alt="x" width="25" src="./images/logo_x.png">
   </a>
 </p>
 
-## 📋 Pré-requisitos  
-- Uma máquina para utilizar de servidor (eu utilizo um Raspberry PI 4).  
-- Docker e Docker Compose instalados.
-- Domínio (não é obrigatório, mas é recomendado para ativar o SSL).  
+# Cloud Server com Nextcloud, Docker e Cloudflare Tunnel
 
-## 🛠️ Passo a Passo  
+Este projeto tem como objetivo a criação de um servidor de nuvem pessoal utilizando [Nextcloud](https://nextcloud.com/), de forma segura e acessível de qualquer lugar. A arquitetura utiliza [Docker](https://www.docker.com/) para containerizar a aplicação, [Nginx](https://www.nginx.com/) como proxy reverso e [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/) para expor o serviço à internet de forma segura, sem a necessidade de abrir portas no seu roteador ou firewall.
 
-### 1. Instalar Docker e Docker Compose  
-```bash
-sudo apt update && sudo apt install docker docker-compose -y
-sudo systemctl enable --now docker
-```
+## Arquitetura da Solução
 
-### 2. Criar as pastas do Nextcloud
-Antes de criar o "external_drive", use o sudo fdisk -l para ver os discos, e escolha o que quiser.
+O fluxo de uma requisição do usuário até a sua instância Nextcloud funcionará da seguinte maneira:
 
-```bash
+Usuário → Internet → Rede Cloudflare → Cloudflared Tunnel → Seu Servidor (Docker) → Nginx (Container) → Nextcloud (Container)
 
-mkdir /external_drive
+Essa abordagem garante que todo o tráfego seja criptografado e passe pela infraestrutura da Cloudflare antes de chegar ao seu servidor.
 
-sudo mount /dev/sdc3 /external_drive 
+## Pré-requisitos
 
-echo "/dev/sdc3 /external_drive ext4 defaults 0 0" | sudo tee -a /etc/fstab
+Antes de começar, garanta que você tenha:
 
-sudo mkdir external_drive
-cd external_drive
-sudo mkdir nextcloud apps config data theme 
-```
-### 3. Criar os arquivos do nextcloud
+-   Um domínio registrado (ex: meudominio.com).
+-   Uma conta gratuita na [Cloudflare](https://www.cloudflare.com/).
+-   Um servidor Linux (pode ser um Raspberry Pi, um VPS ou uma máquina local) com acesso sudo.
+-   Docker e Docker Compose instalados no servidor.
 
-#### Arquivos: Dockerfile.app; nginx.conf; setup-nextcloud.sh; db.env; docker-compose.yml 
-Lembrando que os arquivos não são totalmente necessários, entretanto, todos possuem uma função importante.</p>
-<p>O <a href="https://docs.docker.com/compose/">docker-compose</a> melhora a organização e manutenção, sendo um arquivo de orquestração.</p>
-<p>O db.env organiza melhor as informações sensíveis.</p>
-<p>O <a href="https://www.f5.com/go/product/welcome-to-nginx">Nginx</a> é um arquivo para a configuração do proxy reverso, para aumentar a segurança.</p>
-<p>O Dockerfile é um arquivo para customizar o container do nextcloud.</p>
+---
 
-<p>
-Caso queira instalar eles, apenas faça o download dos no diretório do repositório no github e faça as alterações necessárias para você. 
-</p>
-Coloquei informações de exemplo, para evitar vazar dados sensíveis.
- 
-### Rodar o docker
+## Passo a Passo da Instalação
 
-```bash
-# O comando -p 80:80 está mapeando a porta 80 do container pra porta 80 do pc
-sudo docker run -d -p 80:80 --name nextcloud --restart unless-stopped \
--v /external_drive/nextcloud:/var/www/html \
--v /external_drive/apps:/var/www/html/custom_apps \
--v /external_drive/config:/var/www/html/config \
--v /external_drive/data:/var/www/html/data \
--v /external_drive/theme:/var/www/html/themes \
-nextcloud
-```
+### 1. Configuração Inicial do Domínio na Cloudflare
 
-## 🛡️ Incrementando segurança: 
+O primeiro passo é delegar a gestão do DNS do seu domínio para a Cloudflare.
 
-  <h3>Criar usuários com permissões mínimas.</h3>
-<p>   1. Entre no Nextcloud com uma conta de administrador</p>
-<p>   2. Vá até a seção de usuários e crie um novo</p>
-<p>   3. Preencha o usuário, senha, e-mail.</p>
-<p>   4. Desmarque a opção "Administrador" se ela estiver ativada.</p>
-<p>   5. Agora você precisa acessar o app e definir as permissões</p>
+1.  Acesse o painel da *Cloudflare* e clique em "Adicionar site". Insira seu domínio.
+2.  A Cloudflare irá escanear seus registros DNS e, em seguida, fornecerá dois ou mais *Nameservers* (Servidores de Nomes).
+3.  Acesse o painel de controle do seu provedor de domínio (onde você o registrou) e substitua os nameservers atuais pelos que a Cloudflare forneceu.
 
-  ### Adicionando certificado SSL
-<h4>  Configurar o domínio</h3>
+> *Nota:* A propagação de DNS pode levar de alguns minutos a várias horas.
 
-<p>   Depois de obter o domínio:</p>
+### 2. Preparação do Ambiente no Servidor
 
-</p>1. Acesse o painel do seu domínio e atualize o registro A para apontar para seu IP público</p>
-<p>2. Para baixar a pasta com os certificados:</p>
-<p>3. Necessário instalar o Certbot e o Nginx para fazer proxy reverso.</p>
+#### 2.1. Instalação do Docker
 
-```bash
-sudo apt update
-sudo apt install nginx certbot python3-certbot-nginx
-```
-Criar um arquivo novo :
-```bash
-sudo nano /etc/nginx/sites-available/nextcloud
+Se o Docker ainda não estiver instalado, utilize o script oficial para uma instalação rápida.
 
-# e adicionar: 
-server {
-#obs: IP e dominio de exemplo por questões de segurança.
-#obs2: lembre-se de pegar o IP público, e não da sua máquina. Tive uma boa dor de cabeça por causa de uma "besteira" dessas.
+bash
+# Baixar e executar o script de instalação do Docker
+curl -sSL https://get.docker.com | sh
 
-    listen 80;
-    server_name nuvem.seudominio.com;
+# Adicionar seu usuário ao grupo do Docker para executar comandos sem 'sudo'
+# (Você precisará fazer logout e login novamente para que isso tenha efeito)
+sudo usermod -aG docker ${USER}
 
-    location / {
-        proxy_pass http://111.1.1.1:80;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+# Instalar o plugin do Docker Compose
+sudo apt-get update
+sudo apt-get install -y docker-compose-plugin
 
-```bash
+### 2.2. Estrutura de Arquivos
+
+bash
+mkdir -p nextcloud-server/nginx/conf.d
+cd nextcloud-server
 
 
-<p>Baixar os arquivos de certificado</p>
+<p>A estrutura final ficará:</p>
 
-$ sudo docker compose run --rm certbot certonly \
-  --manual \
-  --preferred-challenges dns \
-  -d seudominio.com.br \
-  --email seuemail@email.com \
-  --agree-tos \
-  --no-eff-email
+bash
+nextcloud-server/
+├── docker-compose.yml
+└── nginx/
+    └── conf.d/
+        └── nextcloud.conf
 
-```
-<p> Deverá retornar algo como: </p>
+## 3. Configuração dos Serviços Docker e Nginx
 
-```bash
+### 3.1 Criando o docker-compose.yml
 
-  [+] Creating 3/3
- ✔ Container storage_server-db-1           Running                         0.0s 
- ✔ Container storage_server-app-1          Running                         0.0s 
- ✔ Container storage_server-nginx-proxy-1  Running                         0.0s 
-Saving debug log to /var/log/letsencrypt/letsencrypt.log
-Requesting a certificate for coronacloud.com.br
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Please deploy a DNS TXT record under the name:
-
-_acme-challenge.seudominio.com.br.
-
-with the following value:
-
-códigoxxx
-
-Before continuing, verify the TXT record has been deployed. Depending on the DNS
-provider, this may take some time, from a few seconds to multiple minutes. You can
-check if it has finished deploying with aid of online tools, such as the Google
-Admin Toolbox: https://toolbox.googleapps.com/apps/dig/#TXT/_acme-challenge.coronacloud.com.br.
-Look for one or more bolded line(s) below the line ';ANSWER'. It should show the
-value(s) you've just added.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Press Enter to Continue
-
-```
-
-<p>Apenas siga as instruções.</p>
+bash
+sudo nano docker-compose.yml
 
 
-mkdir sslcerts
-sudo cp /etc/letsencrypt/live/<dominio>/fullchain.pem ./sslcerts/coronacloud.com.br.crt
-sudo cp /etc/letsencrypt/live/<dominio>/privkey.pem ./sslcerts/coronacloud.com.br.key
-sudo cp /etc/ssl/certs/dhparam.pem ./sslcerts/dhparam.pem  # Se você tiver o Diffie-Hellman
+Cole o arquivo .yml que está no repositório, fazendo as alterações necessárias.
+
+### 3.2 Criando o arquivo nginx/conf.d/nextcloud.config
+
+Este arquivo configura o Nginx que roda dentro do Docker, instruindo-o a receber requisições e encaminhá-las para o serviço do Nextcloud (PHP-FPM).
+
+bash
+sudo nano nginx/conf.d/nextcloud.conf 
 
 
-Criar uma pasta de validação do webroot:
+Cole o arquivo nextcloud.config que está no repositório, fazendo as alterações necessárias.
 
-```bash
-sudo mkdir -p /home/user/projeto/nextcloud/webroot
-```
+## 4.  Instalação e Configuração do Cloudflare Tunnel
 
-Execute o Certbot:
+Para instalar:
+bash
+# Para x86_64, use 'cloudflared-linux-amd64'
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
+sudo mv cloudflared-linux-arm64 /usr/local/bin/cloudflared
 
-```bash
-sudo certbot certonly --webroot \
--w /home/user/projeto/nextcloud/webroot \
--d seudominio.com
-```
-<p>O Certbot colocará arquivos temporários em /webroot/.well-known/acme-challenge/ para que o Let's Encrypt valide que você é dono do domínio.</p>
-
-<p>Copie os arquivos de certificado para o SSL</p>
-
-```bash
-/etc/letsencrypt/live/coronacloud.com.br/
-
-cp /etc/letsencrypt/live/seudominio.com.br/fullchain.pem sslcerts/coronacloud.com.br.crt
-cp /etc/letsencrypt/live/seudominio.com.br/privkey.pem sslcerts/coronacloud.com.br.key
-```
-
-Gere o dhparam com:
-
-```bash
-openssl dhparam -out sslcerts/dhparam.pem 2048
-```
-<p>O gerenciador de arquivos deve ficar parecido com isso:</p>
-<img src="./images/files.png">
-
-<p>Lembrando que o Lets Encrypt expira o certificado a cada 90 dias, e, para isso, deve-se fazer o seguinte:
-
-```bash
-#Para renovar e copiar os aquivos
-sudo crontab -e
-
-0 3 * * * certbot renew --quiet && cp /etc/letsencrypt/live/coronacloud.com.br/fullchain.pem /home/usuario/projetos/nextcloud/sslcerts/coronacloud.com.br.crt && cp /etc/letsencrypt/live/coronacloud.com.br/privkey.pem /home/usuario/projetos/nextcloud/sslcerts/coronacloud.com.br.key
-```
-
-Caso queira gerar o certificado usando o Docker (opcional)
+sudo chmod +x /usr/local/bin/cloudflared
 
 
+### 4.1 Autenticação e criação do túnel
+Faça o login na sua conta Cloudflare:
 
-```bash
-docker-compose run --rm certbot certonly --webroot \
-  --webroot-path=/var/www/certbot \
-  --email seuemail@exemplo.com \
-  --agree-tos \
-  --no-eff-email \
-  -d seudominio.com.br
-```
-
-Após isso, ative e teste o site:
-```bash
-sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-Para obter o certificado SSL com Let´s Encrypt, use: 
-```bash
-sudo certbot --nginx -d nuvem.seudominio.com
-```
-Após isso, teste seu domínio no navegador.
+bash
+cloudflared tunnel login
 
 
+Depois de acessar o link do output do comando acima e autorizar seu domínio, crie o túnel:
+
+bash
+cloudflared tunnel create nextcloud-tunnel
+
+
+<p>Anote o UUID do output!</p>
+
+Crie uma rota DNS:
+
+bash
+cloudflared tunnel route dns nextcloud-tunnel seudominio.com
+
+
+### 4.2 Configuraçao do cloudflared
+Agora iremos configurar o serviço cloudflared. 
+
+bash 
+#obs: o arquivo irá ficar no diretório etc
+sudo mkdir -p /etc/cloudflared
+sudo nano /etc/cloudflared/config.yml
+
+
+Cole o seguinte bloco, substituindo o UUID e o path.
+
+bash 
+tunnel: seuUUID 
+credentials-file: /etc/cloudflared/seuUUID.json
+
+ingress:
+  - hostname: seudominio.com
+    service: http://localhost:8080
+  - service: http_status:404
+
+
+Agora, instale e inicie o serviço cloudflared:
+
+bash 
+sudo cloudflared service install
+sudo systemctl start cloudflared
+
+sudo systemctl status cloudflared
+
+
+## 5. Inicialização e configuração final
+
+Suba os containers e aguarde alguns minutos (no diretório que há o arquivo docker-compose.yml)
+
+bash 
+sudo docker-compose up -d
+
+
+### 5.1 Configurar o config.php
+
+É necessário informar ao nextcloud que ele está rodando através de um proxy reverso
+
+bash
+#acesse o sh no container nextcloud 
+sudo docker-compose exec --user www-data app sh
+
+No shell do container, acesse o config pelo vi
+
+bash
+vi config/config.php
+
+
+Cole esse arquivo com as modificações necessárias:
+
+bash
+<?php
+$CONFIG = array (
+  #gerados automaticamente
+  'instanceid' => '...',
+  'passwordsalt' => '...',
+  'secret' => '...',
+  'installed' => true,
+  'version' => '...', 
+
+  'trusted_domains' => 
+  array (
+    0 => 'localhost',
+    1 => 'seudominio.com',
+  ),
+
+  'overwrite.cli.url' => 'https://seudominio.com',
+  'overwritehost' => 'seudominio.com',
+  'overwriteprotocol' => 'https', 
+
+  'dbtype' => 'mysql',
+  'dbname' => 'nextcloud',
+  'dbhost' => 'db',
+  'dbport' => '',
+  'dbtableprefix' => 'oc_',
+  'mysql.utf8mb4' => true,
+  'dbuser' => 'nextcloud',
+  'dbpassword' => 'password', #mesma do docker-compose.yml
+
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'memcache.locking' => '\\OC\\Memcache\\Redis',
+  'redis' => 
+  array (
+    'host' => 'redis',
+    'port' => 6379,
+  ),
+  
+  'datadirectory' => '/var/www/html/data',
+);
+
+
+Após salvar o arquivo e sair do shell, você pode acessar o https://seudominio.com pelo navegador, que estará funcionando.
