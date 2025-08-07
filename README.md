@@ -52,9 +52,9 @@ O primeiro passo é delegar a gestão do DNS do seu domínio para a Cloudflare.
 Se o Docker ainda não estiver instalado, utilize o script oficial para uma instalação rápida.
 
 bash
+```bash
 # Baixar e executar o script de instalação do Docker
 curl -sSL https://get.docker.com | sh
-
 # Adicionar seu usuário ao grupo do Docker para executar comandos sem 'sudo'
 # (Você precisará fazer logout e login novamente para que isso tenha efeito)
 sudo usermod -aG docker ${USER}
@@ -62,30 +62,30 @@ sudo usermod -aG docker ${USER}
 # Instalar o plugin do Docker Compose
 sudo apt-get update
 sudo apt-get install -y docker-compose-plugin
-
+```
 ### 2.2. Estrutura de Arquivos
 
-bash
+```bash
 mkdir -p nextcloud-server/nginx/conf.d
 cd nextcloud-server
-
+```
 
 <p>A estrutura final ficará:</p>
 
-bash
+```bash
 nextcloud-server/
 ├── docker-compose.yml
 └── nginx/
     └── conf.d/
         └── nextcloud.conf
-
+```
 ## 3. Configuração dos Serviços Docker e Nginx
 
 ### 3.1 Criando o docker-compose.yml
 
-bash
+```bash
 sudo nano docker-compose.yml
-
+```
 
 Cole o arquivo .yml que está no repositório, fazendo as alterações necessárias.
 
@@ -93,56 +93,56 @@ Cole o arquivo .yml que está no repositório, fazendo as alterações necessár
 
 Este arquivo configura o Nginx que roda dentro do Docker, instruindo-o a receber requisições e encaminhá-las para o serviço do Nextcloud (PHP-FPM).
 
-bash
+```bash
 sudo nano nginx/conf.d/nextcloud.conf 
-
+```
 
 Cole o arquivo nextcloud.config que está no repositório, fazendo as alterações necessárias.
 
 ## 4.  Instalação e Configuração do Cloudflare Tunnel
 
 Para instalar:
-bash
+```bash
 # Para x86_64, use 'cloudflared-linux-amd64'
 wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
 sudo mv cloudflared-linux-arm64 /usr/local/bin/cloudflared
 
 sudo chmod +x /usr/local/bin/cloudflared
-
+```
 
 ### 4.1 Autenticação e criação do túnel
 Faça o login na sua conta Cloudflare:
 
-bash
+```bash
 cloudflared tunnel login
-
+``` 
 
 Depois de acessar o link do output do comando acima e autorizar seu domínio, crie o túnel:
 
-bash
+```bash
 cloudflared tunnel create nextcloud-tunnel
-
+```
 
 <p>Anote o UUID do output!</p>
 
 Crie uma rota DNS:
 
-bash
+```bash
 cloudflared tunnel route dns nextcloud-tunnel seudominio.com
-
+```
 
 ### 4.2 Configuraçao do cloudflared
 Agora iremos configurar o serviço cloudflared. 
 
-bash 
+```bash 
 #obs: o arquivo irá ficar no diretório etc
 sudo mkdir -p /etc/cloudflared
 sudo nano /etc/cloudflared/config.yml
-
+```
 
 Cole o seguinte bloco, substituindo o UUID e o path.
 
-bash 
+```bash 
 tunnel: seuUUID 
 credentials-file: /etc/cloudflared/seuUUID.json
 
@@ -150,42 +150,42 @@ ingress:
   - hostname: seudominio.com
     service: http://localhost:8080
   - service: http_status:404
-
+```
 
 Agora, instale e inicie o serviço cloudflared:
 
-bash 
+```bash 
 sudo cloudflared service install
 sudo systemctl start cloudflared
 
 sudo systemctl status cloudflared
-
+```
 
 ## 5. Inicialização e configuração final
 
 Suba os containers e aguarde alguns minutos (no diretório que há o arquivo docker-compose.yml)
 
-bash 
+```bash 
 sudo docker-compose up -d
-
+```
 
 ### 5.1 Configurar o config.php
 
 É necessário informar ao nextcloud que ele está rodando através de um proxy reverso
 
-bash
+```bash
 #acesse o sh no container nextcloud 
 sudo docker-compose exec --user www-data app sh
-
+```
 No shell do container, acesse o config pelo vi
 
-bash
+```bash
 vi config/config.php
-
+```
 
 Cole esse arquivo com as modificações necessárias:
 
-bash
+```bash
 <?php
 $CONFIG = array (
   #gerados automaticamente
@@ -224,6 +224,6 @@ $CONFIG = array (
   
   'datadirectory' => '/var/www/html/data',
 );
-
+```
 
 Após salvar o arquivo e sair do shell, você pode acessar o https://seudominio.com pelo navegador, que estará funcionando.
